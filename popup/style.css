@@ -1,0 +1,75 @@
+body{
+    border-radius: 2rem;
+    width: 20rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* background-color: rgb(42, 42, 42);
+    color: rgb(199, 199, 199); */
+}
+
+.title{
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.container-title{
+    display: flex;
+    flex-direction: row;
+    align-items: center; 
+}
+
+.title-economy{
+    flex: 1;
+}
+
+.bookmark{
+    display: flex;
+    flex-direction: row;
+    align-items: center; 
+
+    padding: 0.5rem;
+    background-color: rgb(220, 223, 233);
+    margin-top: 0.2rem;
+    border-radius: 0.25rem;
+    height: 1.2rem;
+}
+.bookmark-title{
+    flex: 1;
+}
+
+.bookmark-controller{
+    height: 100%;
+}
+
+.img-h100{
+    height: 90%;
+    width: auto;
+    object-fit: contain;
+    margin-left: 0.6rem;
+}
+
+.text-none{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    color: rgb(75, 75, 75);
+    font-style: italic;
+
+    width: 100%;
+    font-style: normal;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+}
+
+.img-btn{
+    cursor: pointer;
+}
+.img-btn:hover{
+    /* background-color: #b9b9b9; 
+    border-radius: 20%;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+    transform: scale(1.2);
+}
