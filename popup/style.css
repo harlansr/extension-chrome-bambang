@@ -1,3 +1,7 @@
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
 body{
     border-radius: 2rem;
     width: 20rem;
@@ -5,18 +9,20 @@ body{
     padding-right: 1rem;
     padding-top: 1rem;
     padding-bottom: 0.5rem;
+    background-color: #ffffff !important;
     /* background-color: rgb(42, 42, 42);
     color: rgb(199, 199, 199); */
 }
 
-hr{
-    padding-bottom: 0px;
-    margin-bottom: 0px;
+hr {
+    margin: 0.5rem 0 !important;
+    border: none !important;
+    border-top: 1px solid #949bde !important;
 }
 
 .title{
-    font-weight: 500;
-    font-size: 1.1rem;
+    font-weight: 600;
+    font-size: 1.2rem;
 }
 
 .container-title{
@@ -44,7 +50,9 @@ hr{
     /* padding: 0.5rem; */
     padding-left: 1rem;
     padding-right: 0.5rem;
-    background-color: rgb(220, 223, 233);
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    background-color: rgb(227, 235, 239);
     margin-top: 0.2rem;
     border-radius: 0.25rem;
     
@@ -76,8 +84,8 @@ hr{
 
     width: 100%;
     font-style: normal;
-    padding-top: 0.7rem;
-    padding-bottom: 0.7rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.2rem;
 }
 
 .img-btn{
@@ -96,4 +104,8 @@ hr{
     color: #333;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
     transform: scale(1.2);
+}
+
+.text-blur {
+    filter: blur(4px);
 }
