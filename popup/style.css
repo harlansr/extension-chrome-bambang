@@ -3,8 +3,15 @@ body{
     width: 20rem;
     padding-left: 1rem;
     padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
     /* background-color: rgb(42, 42, 42);
     color: rgb(199, 199, 199); */
+}
+
+hr{
+    padding-bottom: 0px;
+    margin-bottom: 0px;
 }
 
 .title{
@@ -18,6 +25,13 @@ body{
     align-items: center; 
 }
 
+.container-footer{
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 .title-economy{
     flex: 1;
 }
@@ -27,26 +41,29 @@ body{
     flex-direction: row;
     align-items: center; 
 
-    padding: 0.5rem;
+    /* padding: 0.5rem; */
+    padding-left: 1rem;
+    padding-right: 0.5rem;
     background-color: rgb(220, 223, 233);
     margin-top: 0.2rem;
     border-radius: 0.25rem;
-    height: 1.2rem;
+    
 }
 .bookmark-title{
     flex: 1;
+    cursor: pointer;
 }
 
 .bookmark-controller{
+    display: flex;
+    flex-direction: row;
+    align-items: center; 
+
     height: 100%;
+    padding-top: 0rem;
+    padding-bottom: 0rem;
 }
 
-.img-h100{
-    height: 90%;
-    width: auto;
-    object-fit: contain;
-    margin-left: 0.6rem;
-}
 
 .text-none{
     display: flex;
@@ -65,6 +82,13 @@ body{
 
 .img-btn{
     cursor: pointer;
+    height: 1rem;
+    width: auto;
+    object-fit: contain;
+    margin-left: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    z-index: 10;
 }
 .img-btn:hover{
     /* background-color: #b9b9b9; 

@@ -29,7 +29,10 @@
             "run_at": "document_start"
         }
     ],
-    
+    "options_ui": {
+      "open_in_tab": true,
+      "page": "pages/setting.html"
+   },
     "web_accessible_resources":[
         {
             "resources":[

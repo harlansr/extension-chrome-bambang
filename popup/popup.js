@@ -1,5 +1,10 @@
 import { getActiveTabURL } from "./utils.js";
 
+document.getElementById('open-settings').addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
+});
+
+
 const addNewBookmark = (bookmarksElement, bookmark) => {
     const bookmarkTitle = document.createElement("div");
     const newBookmark = document.createElement("div");
@@ -15,11 +20,13 @@ const addNewBookmark = (bookmarksElement, bookmark) => {
     newBookmark.setAttribute("timestamp", bookmark.time);
 
     setBookmarkAttributes("delete", onDelete, controlsElement);
-    setBookmarkAttributes("play", onPlay, controlsElement);
+    // setBookmarkAttributes("play", onPlay, controlsElement);
 
     newBookmark.appendChild(bookmarkTitle);
     newBookmark.appendChild(controlsElement);
     bookmarksElement.appendChild(newBookmark);
+
+    bookmarkTitle.addEventListener("click",onPlay)
 
 
 };
@@ -39,7 +46,7 @@ const viewBookmarks = (currentBookmarks=[]) => {
 };
 
 const onPlay = async e => {
-    const bookmarkTime = e.target.parentNode.parentNode.getAttribute("timestamp");
+    const bookmarkTime = e.target.parentNode.getAttribute("timestamp");
     const activeTab = await getActiveTabURL();
 
     chrome.tabs.sendMessage(activeTab.id, {
@@ -111,6 +118,10 @@ const getCurrency = ()=>{
     })
     .then(response => {
         if (!response.ok) {
+            // console.log("Status:", response.status)
+            if(response.status ==403){
+                chrome.tabs.create({ url: "https://cors-anywhere.herokuapp.com/corsdemo" });
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
@@ -123,3 +134,4 @@ const getCurrency = ()=>{
         console.error('Terjadi kesalahan:', error);
     });
 }
+
