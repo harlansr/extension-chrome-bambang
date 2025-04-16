@@ -1,15 +1,108 @@
-(()=>{
+// //////////////////// EXTRA ////////////////////
+// const browser = window.browser || window.chrome;
+// const toContentScriptEventName = `ab-yt-channel-name-${Math.random().toString(36).substr(2)}`;
+// const fromContentScriptEventName = `yt-ab-channel-name-${Math.random().toString(36).substr(2)}`;
+
+// const injectScriptIntoTabJS = ({ src, name = "", params = {} }) => {
+//     const scriptElem = document.createElement("script");
+//     scriptElem.type = "module";
+//     scriptElem.src = browser.runtime.getURL(src);
+//     scriptElem.dataset.params = JSON.stringify(params);
+//     scriptElem.dataset.name = name;
+  
+//     try {
+//       (document.head || document.documentElement).appendChild(scriptElem);
+//     } catch (err) {
+//       // eslint-disable-next-line no-console
+//       console.warn(err);
+//     }
+// };
+
+// const runOnYT = function () {
+//     injectScriptIntoTabJS({ src: "assets/purify.min.js" });
+//     injectScriptIntoTabJS({
+//         src: "assets/adblock-yt-capture-requests.js",
+//         name: "capture-requests",
+//         params: {
+//             toContentScriptEventName,
+//             fromContentScriptEventName,
+//         },
+//     });
+
+//     // // process the event messages from the injected script // TODO: Caritau gunanya
+//     // window.addEventListener("message", (event) => {
+//     //     if (!event && !event.data) {
+//     //         return;
+//     //     }
+
+//     //     if (event.data.channelName && event.data.eventName === toContentScriptEventName) {
+//     //         gChannelName = event.data.channelName;
+//     //         if (event.data.videoId) {
+//     //             gNextVideoId = event.data.videoId;
+//     //         }
+
+//     //         browser.runtime.sendMessage({
+//     //             command: "updateYouTubeChannelName",
+//     //             channelName: event.data.channelName,
+//     //         });
+//     //     }
+//     // });
+// };
+
+// const addScript = async function () {
+//     try {
+//         runOnYT();
+//     } catch (err) {
+//         console.error(err);
+//     }
+// };
+
+// const init = async function () {
+//     // browser.runtime.onMessage.addListener(onMessage);
+//     await addScript();
+// };
+
+
+/////////////////////////// MAIN /////////////////////////
+
+( async ()=>{
+    console.log("+++++ SCHRIPT START +++++");
+    // await init();
     let youtbueLeftControls, youtubePlayer;
     let currentVideo = "";
     let currentVideoBookmarks = [];
 
+    
+    /////////////////// ADS ///////////////////
+    const adsBlock =()=>{
+        const targetNode = document.querySelector('.video-ads');
+        if (targetNode) {
+            const observer = new MutationObserver((mutationsList) => {
+                for (let mutation of mutationsList) {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        const skipButtons = document.querySelectorAll('[id^="skip-button:"]');
+                        skipButtons.forEach(element => {
+                            element.style.display = 'block';
+                        })
+                    }
+                }
+            });
+
+            observer.observe(targetNode, {
+                childList: true,
+                subtree: true,
+            });
+        }
+    }
+    
+
     chrome.runtime.onMessage.addListener((obj, sender, response)=>{
         const {type, value, videoId} = obj;
-        console.log("+++ GET +++", obj)
 
         switch (type) {
             case "NEW":
                 currentVideo = videoId;
+                adsBlock();
                 newVideoLoaded();
                 break;
             case "PLAY":
@@ -31,6 +124,7 @@
             });
         });
     }
+    
 
     const newVideoLoaded = async ()=>{
         console.log("=== START ===")
@@ -39,28 +133,6 @@
         ////////////////////////////////////
         const bookmarkBtnExists = document.getElementById("btn-bookmark");
         currentVideoBookmarks = await fetchBookmarks();
-
-        /////////////////// ADS ///////////////////
-        const targetNode = document.querySelector('.video-ads');
-        if (targetNode) {
-            const observer = new MutationObserver((mutationsList) => {
-                for (let mutation of mutationsList) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                        const skipButtons = document.querySelectorAll('[id^="skip-button:"]');
-                        skipButtons.forEach(element => {
-                            element.style.display = 'block';
-                        })
-                    }
-                }
-            });
-
-            observer.observe(targetNode, {
-                childList: true,
-                subtree: true,
-            });
-        }
-
-        
 
         /////////////////// BOOKMARK ///////////////////
 
@@ -98,8 +170,6 @@
         await chrome.storage.sync.set({
             [currentVideo]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b)=>a.time - b.time))
         })
-
-        console.log("===> Bookmarks: ", currentVideoBookmarks);
     }
 
 })();

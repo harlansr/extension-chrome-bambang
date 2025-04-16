@@ -2,8 +2,11 @@
     "manifest_version": 3,
     "name": "Bambang",
     "description":"Membantu kebutuhan harlan",
-    "permissions": ["storage", "tabs"],
-    "host_permissions": ["https://*.youtube.com/*"],
+    "permissions": [
+        "storage", "tabs",
+        "alarms", "contextMenus", "declarativeNetRequestWithHostAccess", "idle", "notifications", "scripting", "unlimitedStorage", "webNavigation", "webRequest"
+    ],
+    "host_permissions": ["*://*.youtube.com/*"],
     "version": "0.0.1",
     "icons": {
       "16": "assets/app/icon.png",
@@ -21,8 +24,9 @@
     },
     "content_scripts":[
         {
-            "matches":["https://*.youtube.com/*"],
-            "js": ["content_scripts/youtube.js"]
+            "matches":["*://*.youtube.com/*"],
+            "js": ["content_scripts/youtube.js"],
+            "run_at": "document_start"
         }
     ],
     
@@ -33,7 +37,15 @@
                 "assets/icons/play.png",
                 "assets/icons/delete.png"
             ],
-            "matches":["https://*.youtube.com/*"]
-        }
+            "matches":["*://*.youtube.com/*"]
+        },
+        {
+            "matches": [ "*://*.youtube.com/*" ],
+            "resources": [ 
+                "assets/adblock-yt-capture-requests.js",
+                "assets/purify.min.js"
+             ],
+            "use_dynamic_url": true
+         }
     ]
   }
