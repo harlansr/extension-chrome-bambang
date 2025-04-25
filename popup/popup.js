@@ -29,6 +29,11 @@ const viewWebBookmark = ()=>{
         },
         {
             group: "Chart",
+            title: "Emas",
+            href: "https://id.tradingview.com/symbols/XAUIDR/",
+        },
+        {
+            group: "Chart",
             title: "GOTO",
             href: "https://www.indopremier.com/#ipot/app/advanced-chart?code=GOTO",
         },
@@ -266,11 +271,7 @@ const getPriceGold = ()=>{
     })
     .then(response => {
         if (!response.ok) {
-            // console.log("Status:", response.status)
-            if(response.status ==403){
-                chrome.tabs.create({ url: "https://cors-anywhere.herokuapp.com/corsdemo" });
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
+            console.log("Status:", response.status)
         }
         return response.json();
     })
