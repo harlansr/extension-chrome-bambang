@@ -28,6 +28,11 @@ const viewWebBookmark = ()=>{
             href: "https://docs.google.com/spreadsheets/d/1iwH3t5xBtmzuTZywqFbJQqr4eMTli3EyuksfAvNckWs/edit?pli=1&gid=1991938989#gid=1991938989&fvid=1686224001",
         },
         {
+            group: "Project",
+            title: "Upgrade Medion - 2",
+            href:"https://docs.google.com/spreadsheets/d/1i2gl9SPoQkaQzyXwJIVDHjj9DRpnttd4ZW0uAhXSsRM/edit?gid=1358275397#gid=1358275397"
+        },
+        {
             group: "Chart",
             title: "Emas",
             href: "https://id.tradingview.com/symbols/XAUIDR/",
@@ -42,6 +47,7 @@ const viewWebBookmark = ()=>{
             title: "BMRI",
             href: "https://www.indopremier.com/#ipot/app/advanced-chart?code=BMRI",
         },
+        
     ];
 
     if(!webBookmarks.length){
@@ -154,6 +160,9 @@ const txtGold = document.getElementById("current_gold");
 const txtUSD_own = document.getElementById("current_usd_own");
 const txtGold_own = document.getElementById("current_gold_own");
 
+const txtUSDLoad = document.getElementById("current_usd_link");
+txtUSDLoad.style.display = 'none';
+
 console.log("== SCRIPT ACTIVE ==");
 
 document.addEventListener("DOMContentLoaded", async()=>{
@@ -241,7 +250,8 @@ const getPriceCurrency = ()=>{
         if (!response.ok) {
             // console.log("Status:", response.status)
             if(response.status ==403){
-                chrome.tabs.create({ url: "https://cors-anywhere.herokuapp.com/corsdemo" });
+                txtUSDLoad.style.display = 'block';
+                // chrome.tabs.create({ url: "https://cors-anywhere.herokuapp.com/corsdemo" });
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
