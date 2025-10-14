@@ -30,7 +30,12 @@ const viewWebBookmark = ()=>{
         {
             group: "Project",
             title: "Upgrade Medion - UAT",
-            href:"https://docs.google.com/spreadsheets/d/1i2gl9SPoQkaQzyXwJIVDHjj9DRpnttd4ZW0uAhXSsRM/edit?gid=1358275397#gid=1358275397&fvid=1734976536"
+            href:"https://docs.google.com/spreadsheets/d/1i2gl9SPoQkaQzyXwJIVDHjj9DRpnttd4ZW0uAhXSsRM/edit?gid=269107226#gid=269107226&fvid=1708819942"
+        },
+        {
+            group: "Project",
+            title: "Upgrade Medion - UAT - PowerPoint",
+            href:"https://intitalenta-my.sharepoint.com/:p:/g/personal/irvan_firmansyah_intalogioffice_com/EfuIc7TKX19Kirbtm_iwZh0B1-dGlj6dek-Evsg2LlbzaQ?rtime=mQI3VwUL3kg"
         },
         {
             group: "Chart",
