@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Bambang",
-    "description":"Membantu kebutuhan harlan",
+    "description":"Bambang is a Chrome extension created as an assistant to provide for Harlan's needs",
     "permissions": [
         "storage", "tabs",
         "alarms", "contextMenus", "declarativeNetRequestWithHostAccess", "idle", "notifications", "scripting", "unlimitedStorage", "webNavigation", "webRequest"
