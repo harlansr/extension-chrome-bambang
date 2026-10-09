@@ -1,28 +1,23 @@
-// chrome.tabs.onUpdated.addListener((tabId, tab)=>{
-//     if(tab.url && tab.url.includes("youtube.com/watch")){
-//         const queryParameters = tab.url.split("?")[1];
-//         const urlParameters = new URLSearchParams(queryParameters);
+const isWatchUrl = (url) => {
+    try {
+        const u = new URL(url);
+        return /(^|\.)youtube\.com$/.test(u.hostname) && u.pathname === "/watch" && u.searchParams.has("v");
+    } catch {
+        return false;
+    }
+};
 
-//         console.log("urlParameters :", urlParameters)
+const notifyTab = (tabId, url) => {
+    const videoId = new URL(url).searchParams.get("v");
+    chrome.tabs.sendMessage(tabId, { type: "NEW", videoId }, () => {
+        // content script belum siap (mis. tab dibuka sebelum extension dimuat) -> abaikan
+        void chrome.runtime.lastError;
+    });
+};
 
-//         chrome.tabs.sendMessage(tabId, {
-//             type: "NEW",
-//             videoId: urlParameters.get("v")
-//         })
-//     }
-// })
-
+// YouTube adalah SPA: pindah video hanya mengubah URL tanpa status 'complete'
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    // Pastikan halaman sudah selesai dimuat
-    if (changeInfo.status === 'complete' && tab.url && tab.url.includes("youtube.com/watch")) {
-        const queryParameters = tab.url.split("?")[1];
-        const urlParameters = new URLSearchParams(queryParameters);
-
-        console.log("urlParameters :", urlParameters);
-
-        chrome.tabs.sendMessage(tabId, {
-            type: "NEW",
-            videoId: urlParameters.get("v")
-        });
+    if ((changeInfo.status === "complete" || changeInfo.url) && tab.url && isWatchUrl(tab.url)) {
+        notifyTab(tabId, tab.url);
     }
 });

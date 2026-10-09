@@ -1,310 +1,301 @@
-import { formatNumber, getActiveTabURL } from "./utils.js";
+import {
+    formatNumber, getActiveTabURL, storageGet, storageSet,
+    normalizeUrl, loadWebBookmarks, saveWebBookmarks, makeBookmark, loadHoldings,
+} from "./utils.js";
+
+const $ = (id) => document.getElementById(id);
 
 let price_list = {};
-let price_list_own = {
-    usd: 0,
-    gold: 25.6,
+let holdings = { usd: 0, gold: 0 };
+let webBookmarks = [];
+
+$('open-settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
+
+/////////////////// WEB BOOKMARK ///////////////////
+
+const bookmarksWebElement = $("web-bookmark");
+const searchInput = $("search");
+
+const renderWebBookmarks = () => {
+    bookmarksWebElement.textContent = "";
+
+    searchInput.hidden = webBookmarks.length < 6;
+    $("group-list").replaceChildren(
+        ...[...new Set(webBookmarks.map((b) => b.group))].map((g) => new Option(g))
+    );
+
+    const q = searchInput.value.trim().toLowerCase();
+    const shown = webBookmarks.filter((b) => !b.hidden && (
+        !q || `${b.group} ${b.title} ${b.href}`.toLowerCase().includes(q)));
+
+    if (!shown.length) {
+        const empty = document.createElement("div");
+        empty.className = "text-none";
+        empty.textContent = q ? "Tidak ada hasil" : "Belum ada bookmark";
+        bookmarksWebElement.appendChild(empty);
+        return;
+    }
+
+    const groups = new Map();
+    shown.forEach((b) => {
+        if (!groups.has(b.group)) groups.set(b.group, []);
+        groups.get(b.group).push(b);
+    });
+
+    [...groups.keys()].forEach((group) => {
+        const label = document.createElement("div");
+        label.className = "group-label";
+        label.textContent = group;
+        bookmarksWebElement.appendChild(label);
+        groups.get(group).forEach((b) => bookmarksWebElement.appendChild(createWebBookmark(b)));
+    });
 };
 
-document.getElementById('open-settings').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+const createWebBookmark = (bookmark) => {
+    const row = document.createElement("div");
+    row.className = "bookmark";
+
+    const icon = document.createElement("img");
+    icon.className = "favicon";
+    icon.alt = "";
+    icon.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(bookmark.href)}&size=16`;
+    icon.addEventListener("error", () => { icon.style.visibility = "hidden"; });
+
+    const title = document.createElement("div");
+    title.className = "bookmark-title";
+    title.textContent = bookmark.title;
+    title.title = bookmark.href;
+    title.addEventListener("click", () => chrome.tabs.create({ url: bookmark.href }));
+    // klik tengah / ctrl-klik: buka tanpa menutup popup terlalu cepat
+    title.addEventListener("auxclick", (e) => {
+        if (e.button === 1) chrome.tabs.create({ url: bookmark.href, active: false });
+    });
+
+    row.append(icon, title);
+    return row;
+};
+
+searchInput.addEventListener("input", renderWebBookmarks);
+
+/////////////////// ADD FORM ///////////////////
+
+const addForm = $("add-form");
+const addError = $("add-error");
+
+const showError = (msg) => {
+    addError.textContent = msg || "";
+    addError.hidden = !msg;
+};
+
+$("toggle-add").addEventListener("click", () => {
+    addForm.hidden = !addForm.hidden;
+    if (!addForm.hidden) $("add-title").focus();
 });
 
-const viewWebBookmark = ()=>{
-    const bookmarksWebElement = document.getElementById("web-bookmark")
-    bookmarksWebElement.innerHTML = "";
+$("add-current").addEventListener("click", async () => {
+    const tab = await getActiveTabURL();
+    if (!tab) return;
+    $("add-title").value = (tab.title || "").slice(0, 60);
+    $("add-url").value = tab.url || "";
+});
 
-    
+addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const href = normalizeUrl($("add-url").value);
+    const title = $("add-title").value.trim();
+    if (!title) return showError("Judul wajib diisi");
+    if (!href) return showError("URL tidak valid (harus http/https)");
+    if (webBookmarks.some((b) => b.href === href)) return showError("URL sudah ada di daftar");
 
-    const webBookmarks = [
-        {
-            group: "Project",
-            title: "Birdmate",
-            href: "https://docs.google.com/spreadsheets/d/1-3UJSgsnpfx8Phu30HV67aZvuYTuFINxcLfHWk7nQFk/edit?gid=0#gid=0",
-        },
-        {
-            group: "Project",
-            title: "Upgrade Medion",
-            href: "https://docs.google.com/spreadsheets/d/1iwH3t5xBtmzuTZywqFbJQqr4eMTli3EyuksfAvNckWs/edit?pli=1&gid=1991938989#gid=1991938989&fvid=1686224001",
-        },
-        {
-            group: "Project",
-            title: "Upgrade Medion - UAT",
-            href:"https://docs.google.com/spreadsheets/d/1i2gl9SPoQkaQzyXwJIVDHjj9DRpnttd4ZW0uAhXSsRM/edit?gid=269107226#gid=269107226&fvid=1708819942"
-        },
-        {
-            group: "Project",
-            title: "Upgrade Medion - UAT - PowerPoint",
-            href:"https://intitalenta-my.sharepoint.com/:p:/g/personal/irvan_firmansyah_intalogioffice_com/EfuIc7TKX19Kirbtm_iwZh0B1-dGlj6dek-Evsg2LlbzaQ?rtime=mQI3VwUL3kg"
-        },
-        {
-            group: "Chart",
-            title: "Emas",
-            href: "https://id.tradingview.com/symbols/XAUIDR/",
-        },
-        {
-            group: "Chart",
-            title: "GOTO",
-            href: "https://www.indopremier.com/#ipot/app/advanced-chart?code=GOTO",
-        },
-        {
-            group: "Chart",
-            title: "BMRI",
-            href: "https://www.indopremier.com/#ipot/app/advanced-chart?code=BMRI",
-        },
-        
-    ];
+    webBookmarks.push(makeBookmark({ title, href, group: $("add-group").value }));
+    await saveWebBookmarks(webBookmarks);
+    addForm.reset();
+    showError("");
+    addForm.hidden = true;
+    renderWebBookmarks();
+});
 
-    if(!webBookmarks.length){
-        bookmarksWebElement.innerHTML=`<i class="row text-center text-none">No bookmarks to show</i>`
-        return;
-    }
+/////////////////// YOUTUBE BOOKMARK ///////////////////
 
-    webBookmarks.sort((a, b) => a.group.localeCompare(b.group));
-    webBookmarks.forEach((element, i) => {
-        addWebBookmark(i, bookmarksWebElement, element)
+const conYoutube = $("container-youtube");
+
+const sendToTab = (tabId, message) =>
+    new Promise((resolve) => {
+        chrome.tabs.sendMessage(tabId, message, (res) => {
+            // content script mungkin belum aktif (tab belum di-refresh)
+            void chrome.runtime.lastError;
+            resolve(res);
+        });
     });
-    
-}
 
-const addWebBookmark = (i, bookmarksWebElement, bookmark) =>{
-    const newBookmark = document.createElement("div");
-    const bookmarkTitle = document.createElement("div");
-
-    bookmarkTitle.textContent = `${bookmark.group} - ${bookmark.title}`;
-    bookmarkTitle.className = "bookmark-title";
-
-    newBookmark.id = "web-bookmark-" + i;
-    newBookmark.className = "bookmark";
-    newBookmark.setAttribute("href", bookmark.href);
-
-    newBookmark.appendChild(bookmarkTitle);
-    // newBookmark.appendChild(controlsElement);
-    bookmarksWebElement.appendChild(newBookmark);
-
-    bookmarkTitle.addEventListener("click",()=>{
-        chrome.tabs.create({ url: bookmark.href });
-    })
-}
+const formatTime = (t) => {
+    const s = Math.max(0, Math.floor(Number(t) || 0));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    const mm = String(m).padStart(2, "0"), ss = String(sec).padStart(2, "0");
+    return h ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
+};
 
 const addNewBookmark = (bookmarksElement, bookmark) => {
-    const newBookmark = document.createElement("div");
-    const bookmarkTitle = document.createElement("div");
-    const controlsElement = document.createElement("div");
+    const row = document.createElement("div");
+    row.className = "bookmark";
 
-    bookmarkTitle.textContent = bookmark.desc;
-    bookmarkTitle.className = "bookmark-title";
+    const title = document.createElement("div");
+    title.className = "bookmark-title";
+    title.textContent = `${formatTime(bookmark.time)} — ${bookmark.desc}`;
+    title.addEventListener("click", async () => {
+        const tab = await getActiveTabURL();
+        if (tab) sendToTab(tab.id, { type: "PLAY", value: bookmark.time });
+    });
 
-    controlsElement.className = "bookmark-controller";
+    const del = document.createElement("button");
+    del.className = "icon-btn danger";
+    del.title = "Hapus";
+    del.textContent = "×";
+    del.addEventListener("click", async () => {
+        const tab = await getActiveTabURL();
+        const list = tab && await sendToTab(tab.id, { type: "DELETE", value: bookmark.time });
+        if (Array.isArray(list)) viewBookmarks(list);
+        else row.remove();
+    });
 
-    newBookmark.id = "bookmark-"+bookmark.time;
-    newBookmark.className = "bookmark";
-    newBookmark.setAttribute("timestamp", bookmark.time);
-
-    setBookmarkAttributes("delete", onDelete, controlsElement);
-    // setBookmarkAttributes("play", onPlay, controlsElement);
-
-    newBookmark.appendChild(bookmarkTitle);
-    newBookmark.appendChild(controlsElement);
-    bookmarksElement.appendChild(newBookmark);
-
-    bookmarkTitle.addEventListener("click",onPlay)
-
-
+    row.append(title, del);
+    bookmarksElement.appendChild(row);
 };
 
-const viewBookmarks = (currentBookmarks=[]) => {
-    const bookmarksElement = document.getElementById("yt-bookmarks")
-    bookmarksElement.innerHTML = "";
+const viewBookmarks = (currentBookmarks = []) => {
+    const bookmarksElement = $("yt-bookmarks");
+    bookmarksElement.textContent = "";
 
-    if(currentBookmarks.length === 0){
-        bookmarksElement.innerHTML=`<i class="row text-center text-none">No bookmarks to show</i>`
+    if (!currentBookmarks.length) {
+        const empty = document.createElement("div");
+        empty.className = "text-none";
+        empty.textContent = "Belum ada bookmark";
+        bookmarksElement.appendChild(empty);
         return;
     }
-    currentBookmarks.forEach(element => {
-        addNewBookmark(bookmarksElement, element)
-    });
-
+    currentBookmarks.forEach((b) => addNewBookmark(bookmarksElement, b));
 };
 
-const onPlay = async e => {
-    const bookmarkTime = e.target.parentNode.getAttribute("timestamp");
-    const activeTab = await getActiveTabURL();
+/////////////////// PRICE ///////////////////
 
-    chrome.tabs.sendMessage(activeTab.id, {
-        type: "PLAY",
-        value: bookmarkTime
-    })
+const txtUSD = $("current_usd");
+const txtGold = $("current_gold");
+const txtUSD_own = $("current_usd_own");
+const txtGold_own = $("current_gold_own");
+const backendNote = $("backend-note");
+const txtUpdated = $("price-updated");
+
+const setTrend = (el, now, before) => {
+    el.classList.remove("text-warning", "text-up", "text-down");
+    if (!Number.isFinite(before) || now === before) return;
+    el.classList.add(now > before ? "text-up" : "text-down");
 };
 
-const onDelete = async e => {
-    const activeTab = await getActiveTabURL();
-    const bookmarkTime = e.target.parentNode.parentNode.getAttribute("timestamp");
-    const bookmarkToDelete = document.getElementById("bookmark-"+bookmarkTime);
-
-    bookmarkToDelete.parentNode.removeChild(bookmarkToDelete);
-
-    chrome.tabs.sendMessage(activeTab.id,{
-        type:"DELETE",
-        value: bookmarkTime,
-    }, viewBookmarks);
+const showUpdated = () => {
+    if (!price_list.updated) return;
+    txtUpdated.textContent = "Diperbarui " + new Date(price_list.updated)
+        .toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" });
 };
 
-const setBookmarkAttributes = (src, event, controlParentElement) => {
-    const controlElement = document.createElement("img");
-    controlElement.src= "../assets/icons/"+src+".png";
-    controlElement.title = src;
-    controlElement.className = "img-btn img-h100"
-    controlElement.addEventListener("click", event);
-    controlParentElement.appendChild(controlElement);
+const showUSD = (value) => {
+    txtUSD.textContent = formatNumber(value);
+    txtUSD_own.textContent = formatNumber(value * holdings.usd);
 };
 
-const conYoutube = document.getElementById("container-youtube");
-const txtUSD = document.getElementById("current_usd");
-const txtGold = document.getElementById("current_gold");
-const txtUSD_own = document.getElementById("current_usd_own");
-const txtGold_own = document.getElementById("current_gold_own");
+const showGold = (value) => {
+    txtGold.textContent = formatNumber(value);
+    txtGold_own.textContent = formatNumber((price_list.goldBuyback || value) * holdings.gold);
+};
 
-const txtUSDLoad = document.getElementById("current_usd_link");
-txtUSDLoad.style.display = 'none';
-
-console.log("== SCRIPT ACTIVE ==");
-
-document.addEventListener("DOMContentLoaded", async()=>{
-    const activeTab = await getActiveTabURL();
-    const queryParameters = activeTab.url.split("?")[1];
-    const urlParameters = new URLSearchParams(queryParameters);
-
-    const currentVideo = urlParameters.get("v");
-
-    if(activeTab.url.includes("youtube.com/watch") && currentVideo){
-        conYoutube.style.display = 'block';
-        chrome.storage.sync.get([currentVideo], (data) => {
-            const currentVideoBookmarks = data[currentVideo] ? JSON.parse(data[currentVideo]): [];
-            viewBookmarks(currentVideoBookmarks);
-        })
-    }else{
-        conYoutube.style.display = 'none';
+const fetchJson = async (url, options = {}) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        if (!response.ok) {
+            const err = new Error(`HTTP ${response.status}`);
+            err.status = response.status;
+            throw err;
+        }
+        return await response.json();
+    } finally {
+        clearTimeout(timer);
     }
+};
 
-    const blurTexts = document.getElementsByClassName("text-blur");
-    Array.from(blurTexts).forEach(element => {
-        element.addEventListener("click", () => {
-            element.classList.toggle("text-blur");
-        });
-    });
+const BACKEND_URL = "http://127.0.0.1:8080";
 
-    viewWebBookmark();
+const getPrice = async () => {
+    const btn = $("refresh-price");
+    btn.classList.add("spin");
+    btn.disabled = true;
+    try {
+        const data = await fetchJson(`${BACKEND_URL}/api/prices`);
+        backendNote.hidden = true;
+
+        if (data.usd > 0) {
+            const usd = Math.round(data.usd);
+            showUSD(usd);
+            setTrend(txtUSD, usd, price_list.usd);
+            price_list.usd = usd;
+        }
+        if (data.gold > 0) {
+            const gold = Math.round(data.gold);
+            price_list.goldBuyback = Math.round(data.goldBuyback) || 0;
+            showGold(gold);
+            setTrend(txtGold, gold, price_list.gold);
+            price_list.gold = gold;
+        }
+        price_list.updated = data.updated ? Date.parse(data.updated) : Date.now();
+        await storageSet("local", "price", price_list);
+        showUpdated();
+    } catch (error) {
+        // backend mati / belum dijalankan: tetap tampilkan harga tersimpan
+        backendNote.hidden = false;
+        console.error("Gagal memuat harga:", error);
+    } finally {
+        btn.classList.remove("spin");
+        btn.disabled = false;
+    }
+};
+
+$("refresh-price").addEventListener("click", getPrice);
+
+[txtUSD_own, txtGold_own].forEach((el) =>
+    el.addEventListener("click", () => el.classList.toggle("text-blur")));
+
+/////////////////// INIT ///////////////////
+
+document.addEventListener("DOMContentLoaded", async () => {
+    [webBookmarks, holdings, price_list] = await Promise.all([
+        loadWebBookmarks(),
+        loadHoldings(),
+        storageGet("local", "price").then((p) => p || {}),
+    ]);
+
+    renderWebBookmarks();
+
+    // tampilkan harga tersimpan dulu, lalu perbarui
+    if (price_list.usd) { showUSD(price_list.usd); txtUSD.classList.add("text-warning"); }
+    if (price_list.gold) { showGold(price_list.gold); txtGold.classList.add("text-warning"); }
+    showUpdated();
     getPrice();
-})
 
-const getPrice = async ()=>{
-    
-    price_list = await priceLoad();
-    console.log("--- PRICE: ", price_list, price_list.silver);
+    // YouTube
+    const activeTab = await getActiveTabURL();
+    let currentVideo = null;
+    try {
+        const url = new URL(activeTab?.url || "");
+        if (/(^|\.)youtube\.com$/.test(url.hostname) && url.pathname === "/watch") {
+            currentVideo = url.searchParams.get("v");
+        }
+    } catch { /* URL tidak valid (mis. halaman chrome://) */ }
 
-    const divLoading = ` <div class="spinner-border spinner-border-sm text-warning" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-    if(price_list.usd){
-        const currentIDR =  Math.round(price_list.usd);
-        txtUSD.innerHTML = formatNumber(currentIDR);
-        txtUSD_own.innerHTML = formatNumber(currentIDR*price_list_own.usd);
-        txtUSD.classList.add("text-warning");
+    if (currentVideo) {
+        conYoutube.hidden = false;
+        const raw = await storageGet("sync", currentVideo);
+        let list = [];
+        try { list = raw ? JSON.parse(raw) : []; } catch { /* data rusak */ }
+        viewBookmarks(Array.isArray(list) ? list : []);
     }
-    if(price_list.gold){
-        txtGold.innerHTML = formatNumber(price_list.gold);
-        txtGold_own.innerHTML = formatNumber(price_list.gold*price_list_own.gold);
-        txtGold.classList.add("text-warning");
-    }
-    
-    getPriceCurrency();
-    getPriceGold();
-}
-
-const priceLoad = ()=>{
-    return new Promise((resolve)=>{
-        chrome.storage.sync.get(["price"], (obj)=>{
-            resolve(obj["price"]? JSON.parse(obj["price"]): {});
-        });
-    });
-}
-
-const priceSave = (type, value)=>{
-    price_list[type] = value;
-    chrome.storage.sync.set({
-        ["price"]: JSON.stringify(price_list)
-    })
-}
-
-
-const getPriceCurrency = ()=>{
-    const username = 'lodestar';
-    const password = 'pugsnax';
-    const credentials = btoa(`${username}:${password}`); // encode ke base64
-
-    fetch('https://cors-anywhere.herokuapp.com/https://www.xe.com/api/protected/midmarket-converter/', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/json',
-            'Origin': 'https://www.xe.com/',
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            // console.log("Status:", response.status)
-            if(response.status ==403){
-                txtUSDLoad.style.display = 'block';
-                // chrome.tabs.create({ url: "https://cors-anywhere.herokuapp.com/corsdemo" });
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        const currentIDR =  Math.round(data.rates.IDR);
-        txtUSD.innerHTML = formatNumber(currentIDR);
-        txtUSD_own.innerHTML = formatNumber(currentIDR*price_list_own.usd);
-        txtUSD.classList.remove("text-warning");
-        
-        if(currentIDR>price_list.usd){
-            txtUSD.classList.add("text-danger");
-        }else{
-            txtUSD.classList.add("text-primary");
-        }
-        priceSave("usd",currentIDR);
-    })
-    .catch(error => {
-        console.error('Terjadi kesalahan:', error);
-    });
-}
-
-const getPriceGold = ()=>{
-    fetch('https://logam-mulia-api.vercel.app/prices/anekalogam', {
-        method: 'GET',
-    })
-    .then(response => {
-        if (!response.ok) {
-            console.log("Status:", response.status)
-        }
-        return response.json();
-    })
-    .then(data => {
-        const price_new = data.data[0].buy;
-        txtGold.innerHTML = formatNumber(price_new);
-        txtGold_own.innerHTML = formatNumber(price_new*price_list_own.gold);
-        txtGold.classList.remove("text-warning");
-        if(price_new>=price_list.gold){
-            txtGold.classList.add("text-primary");
-        }else{
-            txtGold.classList.add("text-danger");
-        }
-        priceSave("gold", price_new);
-    })
-    .catch(error => {
-        console.error('Terjadi kesalahan:', error);
-    });
-};
-
-
+});

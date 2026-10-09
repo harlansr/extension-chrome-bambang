@@ -105,22 +105,33 @@
                 adsBlock();
                 newVideoLoaded();
                 break;
-            case "PLAY":
-                youtubePlayer.currentTime = value;
+            case "PLAY": {
+                const player = youtubePlayer || document.getElementsByClassName("video-stream")[0];
+                const t = Number(value);
+                if (player && Number.isFinite(t)) player.currentTime = t;
                 break;
-            case "DELETE":
-                currentVideoBookmarks = currentVideoBookmarks.filter((b)=>b.time != value);
-                chrome.storage.sync.set({[currentVideo]: JSON.stringify(currentVideoBookmarks)})
-
-                response(currentVideoBookmarks);
-                break;
+            }
+            case "DELETE": {
+                const t = Number(value);
+                fetchBookmarks().then((list)=>{
+                    currentVideoBookmarks = list.filter((b)=>Number(b.time) !== t);
+                    chrome.storage.sync.set({[currentVideo]: JSON.stringify(currentVideoBookmarks)});
+                    response(currentVideoBookmarks);
+                });
+                return true; // response dikirim secara async
+            }
         }
     });
 
     const fetchBookmarks = ()=>{
         return new Promise((resolve)=>{
             chrome.storage.sync.get([currentVideo], (obj)=>{
-                resolve(obj[currentVideo]? JSON.parse(obj[currentVideo]): []);
+                try {
+                    const list = obj[currentVideo]? JSON.parse(obj[currentVideo]): [];
+                    resolve(Array.isArray(list)? list: []);
+                } catch {
+                    resolve([]);
+                }
             });
         });
     }
@@ -147,26 +158,26 @@
             // bookmarkBtn.style.paddingBottom = "2rem";
     
             const videoControls_L = document.getElementsByClassName("ytp-left-controls")[0]
-            const videControls_R = document.getElementsByClassName("ytp-right-controls")[0]
-    
-            videoControls_L.appendChild(bookmarkBtn)
-            // videControls_R.prepend(bookmarkBtn)
-    
-            bookmarkBtn.addEventListener("click",addNewBookmarkHandler)
+            if(videoControls_L){
+                videoControls_L.appendChild(bookmarkBtn)
+                bookmarkBtn.addEventListener("click",addNewBookmarkHandler)
+            }
         }
 
     }
 
     const addNewBookmarkHandler = async ()=>{
-        const currentTime = youtubePlayer.currentTime;
+        if(!youtubePlayer || !currentVideo) return;
+        const currentTime = Math.floor(youtubePlayer.currentTime);
         const newBookmark = {
             time: currentTime,
             desc: "Bookmark at "+getTime(currentTime)
         };
 
         currentVideoBookmarks = await fetchBookmarks();
+        // hindari duplikat di detik yang sama
+        if(currentVideoBookmarks.some((b)=>Number(b.time) === currentTime)) return;
 
-        // alert(newBookmark.desc);
         await chrome.storage.sync.set({
             [currentVideo]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b)=>a.time - b.time))
         })
@@ -178,5 +189,5 @@ const getTime = t=>{
     var date = new Date(0);
     date.setSeconds(t);
 
-    return date.toISOString().substr(11,8);
+    return date.toISOString().slice(11,19);
 }

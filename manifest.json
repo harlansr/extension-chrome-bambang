@@ -1,54 +1,53 @@
 {
     "manifest_version": 3,
     "name": "Bambang",
-    "description":"Membantu kebutuhan harlan",
-    "permissions": [
-        "storage", "tabs",
-        "alarms", "contextMenus", "declarativeNetRequestWithHostAccess", "idle", "notifications", "scripting", "unlimitedStorage", "webNavigation", "webRequest"
+    "description": "Membantu kebutuhan harlan",
+    "permissions": ["storage", "tabs", "favicon"],
+    "host_permissions": [
+        "*://*.youtube.com/*",
+        "http://127.0.0.1:8080/*"
     ],
-    "host_permissions": ["*://*.youtube.com/*"],
-    "version": "0.0.1",
+    "version": "0.0.2",
     "icons": {
-      "16": "assets/app/icon.png",
-      "32": "assets/app/icon.png",
-      "48": "assets/app/icon.png",
-      "128": "assets/app/icon.png"
+        "16": "assets/app/icon.png",
+        "32": "assets/app/icon.png",
+        "48": "assets/app/icon.png",
+        "128": "assets/app/icon.png"
     },
     "action": {
-        "default_popup": "/popup/popup.html",
+        "default_popup": "popup/popup.html",
         "default_icon": "assets/app/icon.png"
     },
-
-    "background":{
-        "service_worker":"background/background.js"
+    "background": {
+        "service_worker": "background/background.js"
     },
-    "content_scripts":[
+    "content_scripts": [
         {
-            "matches":["*://*.youtube.com/*"],
+            "matches": ["*://*.youtube.com/*"],
             "js": ["content_scripts/youtube.js"],
             "run_at": "document_start"
         }
     ],
     "options_ui": {
-      "open_in_tab": true,
-      "page": "pages/setting.html"
-   },
-    "web_accessible_resources":[
+        "open_in_tab": true,
+        "page": "pages/setting.html"
+    },
+    "web_accessible_resources": [
         {
-            "resources":[
+            "resources": [
                 "assets/icons/book-bookmark-icon.png",
                 "assets/icons/play.png",
                 "assets/icons/delete.png"
             ],
-            "matches":["*://*.youtube.com/*"]
+            "matches": ["*://*.youtube.com/*"]
         },
         {
-            "matches": [ "*://*.youtube.com/*" ],
-            "resources": [ 
+            "matches": ["*://*.youtube.com/*"],
+            "resources": [
                 "assets/adblock-yt-capture-requests.js",
                 "assets/purify.min.js"
-             ],
+            ],
             "use_dynamic_url": true
-         }
+        }
     ]
-  }
+}

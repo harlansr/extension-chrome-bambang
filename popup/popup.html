@@ -1,74 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script> -->
-
-    <title>Document</title>
+    <title>Bambang</title>
     <link rel="stylesheet" href="./style.css">
     <script type="module" src="./popup.js"></script>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-    <!-- FONT -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
 </head>
 <body>
-    <div id="container-economy">
-        <div class="container-title">
-            <span class="title title-economy">Keuangan</span>
-        </div>
-        <div>
-            <table style="width:100%">
+    <header class="section-head">
+        <h1 class="title">Keuangan</h1>
+        <button id="refresh-price" class="icon-btn" title="Muat ulang harga">&#x21bb;</button>
+    </header>
+    <section id="container-economy" class="card">
+        <table class="price-table">
+            <thead>
+                <tr><th></th><th>Harga</th><th>Aset saya</th></tr>
+            </thead>
+            <tbody>
                 <tr>
-                    <td>USD <a id="current_usd_link" href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">(LOAD)</a></td>
-                    <td id="current_usd">0</td> 
-                    <td id="current_usd_own" class="text-blur">0</td> 
+                    <td class="label">USD</td>
+                    <td id="current_usd">-</td>
+                    <td id="current_usd_own" class="text-blur" title="Klik untuk tampilkan">-</td>
                 </tr>
                 <tr>
-                    <td>GOLD</td>
-                    <td id="current_gold">0</td>
-                    <td id="current_gold_own" class="text-blur">0</td> 
+                    <td class="label">Emas</td>
+                    <td id="current_gold">-</td>
+                    <td id="current_gold_own" class="text-blur" title="Klik untuk tampilkan">-</td>
                 </tr>
-            </table>
-            <!-- <div>
-                <span id="current_idr">USD  =</span>
-            </div>
-            <div>
-                <span id="current_gold">GOLD =</span>
-            </div> -->
-        </div>
-    </div>
-    <div id="container-youtube">
-        <hr>
-        <span class="title">Youtube</span>
+            </tbody>
+        </table>
+        <div id="price-updated" class="muted"></div>
+        <div id="backend-note" class="error" hidden>Backend tidak aktif (jalankan server Go di 127.0.0.1:8080)</div>
+    </section>
+
+    <section id="container-youtube" hidden>
+        <h1 class="title">YouTube</h1>
         <div id="yt-bookmarks"></div>
-    </div>
-    <div class="container-bookmark">
-        <hr>
-        <span class="title">Bookmark</span>
-        <!-- <a href="https://www.indopremier.com/#ipot/app/advanced-chart?code=GOTO" target="_blank">Buka GOTO</a> -->
-        <div id="web-bookmark">
-            <div class="bookmark" href="https://www.indopremier.com/#ipot/app/advanced-chart?code=GOTO" >GOTO Chart</div>
-            <div class="bookmark">Birdmate Project</div>
-        </div>
-    </div>
-    <div class="container-footer text-end">
-        <hr>
-        <!-- <button id="open-settings" class="btn btn-sm btn-warning">Setting</button> -->
-        <i class="btn bi bi-gear p-0 m-0" id="open-settings"></i>
-        <!-- <button class="btn btn-primary">
-        </button> -->
-    </div>
+    </section>
 
+    <section class="container-bookmark">
+        <header class="section-head">
+            <h1 class="title">Bookmark</h1>
+            <button id="toggle-add" class="icon-btn" title="Tambah bookmark">+</button>
+        </header>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script> -->
-</body>
+        <form id="add-form" class="card" hidden autocomplete="off">
+            <input id="add-title" type="text" placeholder="Judul" maxlength="60" required>
+            <input id="add-url" type="url" placeholder="https://..." required>
+            <input id="add-group" type="text" placeholder="Grup (opsional)" maxlength="30" list="group-list">
+            <datalist id="group-list"></datalist>
+            <div id="add-error" class="error" hidden></div>
+            <div class="form-actions">
+                <button type="button" id="add-current" class="btn">Tab ini</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+
+        <input id="search" type="search" placeholder="Cari bookmark..." hidden>
+        <div id="web-bookmark"></div>
+    </section>
+
+    <footer class="container-footer">
+        <button id="open-settings" class="icon-btn" title="Pengaturan">&#x2699;</button>
+    </footer>
 </body>
 </html>

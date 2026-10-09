@@ -1,26 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bambang setting</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-
-    <!-- FONT -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
+    <title>Bambang - Pengaturan</title>
+    <link rel="stylesheet" href="../popup/style.css">
     <style>
-        * {
-            font-family: 'Roboto', sans-serif;
+        body { width: auto; min-height: 100vh; padding: 0; font-size: 1rem; }
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            flex: none;
+            width: 14rem;
+            padding: 1.2rem 0.8rem;
+            background: var(--card);
+            border-right: 1px solid var(--line);
+        }
+        .sidebar h1 { margin: 0 0.6rem 1rem; font-size: 1.1rem; }
+        .nav-item {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.2rem;
+            padding: 0.55rem 0.7rem;
+            border: 0;
+            border-radius: 0.4rem;
+            background: transparent;
+            color: var(--fg);
+            font-size: 0.9rem;
+            text-align: left;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: var(--card-hover); }
+        .nav-item.active { background: var(--accent); color: #fff; }
+
+        .content { flex: 1; min-width: 0; max-width: 46rem; padding: 1.5rem 2rem; }
+        .content h2 { margin: 0 0 1rem; font-size: 1.2rem; }
+        .panel .card { margin-bottom: 1rem; padding: 0.9rem 1rem; }
+        .panel h3 { margin: 0 0 0.6rem; font-size: 0.95rem; }
+
+        label { display: block; margin-bottom: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+        .row { display: flex; gap: 0.5rem; }
+        .row > * { flex: 1; min-width: 0; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .saved { color: var(--down); font-size: 0.8rem; }
+        .btn-danger:hover { color: var(--up); border-color: var(--up); }
+
+        .group-head { display: flex; align-items: center; gap: 0.2rem; margin-top: 0.9rem; }
+        .group-head .group-label { flex: 1; margin-top: 0; }
+        .icon-btn:disabled { opacity: 0.3; cursor: default; }
+        .bm-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.3rem;
+            padding: 0.45rem 0.6rem;
+            background: var(--card);
+            border-radius: 0.4rem;
+        }
+        .bm-item:hover { background: var(--card-hover); }
+        .bm-item[draggable="true"] { cursor: grab; }
+        .bm-item.is-hidden .bm-info, .bm-item.is-hidden img { opacity: 0.45; }
+        .bm-item.dragging { opacity: 0.4; }
+        .drop-over { outline: 2px dashed var(--accent); outline-offset: -2px; border-radius: 0.4rem; }
+        .bm-item img { width: 16px; height: 16px; flex: none; }
+        .bm-info { flex: 1; min-width: 0; }
+        .bm-title, .bm-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bm-url { color: var(--muted); font-size: 0.75rem; }
+        .icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0; font-size: 0.8rem; }
+        .icon-btn svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        select {
+            width: 100%;
+            margin-bottom: 0.4rem;
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--line);
+            border-radius: 0.35rem;
+            background: var(--bg);
+            color: var(--fg);
+            font-size: 0.85rem;
+        }
+
+        dialog {
+            width: min(26rem, calc(100vw - 2rem));
+            padding: 1.1rem 1.2rem;
+            border: 1px solid var(--line);
+            border-radius: 0.6rem;
+            background: var(--bg);
+            color: var(--fg);
+        }
+        dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+        @media (max-width: 640px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+            .content { padding: 1rem; }
         }
     </style>
 </head>
 <body>
-    <span>- SETTING -</span>
+    <div class="layout">
+        <nav class="sidebar">
+            <h1>Bambang</h1>
+            <button class="nav-item active" data-panel="assets">Aset saya</button>
+            <button class="nav-item" data-panel="bookmarks">Bookmark</button>
+        </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+        <main class="content">
+            <div id="panel-assets" class="panel">
+                <h2>Aset saya</h2>
+                <form id="holdings-form" class="card">
+                    <label for="h-usd">Jumlah USD</label>
+                    <input id="h-usd" type="number" min="0" step="any">
+                    <label for="h-gold">Emas (gram)</label>
+                    <input id="h-gold" type="number" min="0" step="any">
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <span id="saved" class="saved" hidden>Tersimpan</span>
+                    </div>
+                </form>
+            </div>
+
+            <div id="panel-bookmarks" class="panel" hidden>
+                <h2>Bookmark</h2>
+
+                <dialog id="bm-dialog">
+                    <form id="bm-form" method="dialog">
+                        <h3 id="bm-form-title">Tambah bookmark</h3>
+                        <input type="hidden" id="bm-id">
+                        <label for="bm-title">Judul</label>
+                        <input id="bm-title" type="text" required>
+                        <label for="bm-href">URL</label>
+                        <input id="bm-href" type="text" placeholder="https://..." required>
+                        <label for="bm-group">Grup</label>
+                        <select id="bm-group"></select>
+                        <input id="bm-group-new" type="text" placeholder="Nama grup baru" hidden>
+                        <div id="bm-error" class="error" hidden></div>
+                        <div class="form-actions">
+                            <button type="button" class="btn" id="bm-cancel">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="bm-submit">Tambah</button>
+                        </div>
+                    </form>
+                </dialog>
+
+                <div class="card">
+                    <div class="actions">
+                        <button id="add" class="btn btn-primary">+ Tambah bookmark</button>
+                        <button id="export" class="btn">Ekspor JSON</button>
+                        <button id="import" class="btn">Impor JSON</button>
+                        <button id="reset" class="btn btn-danger">Kosongkan</button>
+                        <input id="import-file" type="file" accept="application/json" hidden>
+                    </div>
+                    <div id="msg" class="muted"></div>
+                </div>
+
+                <div id="bm-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="./setting.js"></script>
 </body>
 </html>
